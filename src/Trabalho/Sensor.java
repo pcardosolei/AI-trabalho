@@ -38,7 +38,7 @@ public class Sensor extends Agent
 		dfd.addServices(sd);
 		
 		try{ DFService.register(this, dfd );}
-        catch (FIPAException fe) { fe.printStackTrace(); }
+                    catch (FIPAException fe) { fe.printStackTrace(); }
 		
 		System.out.println("Agente "+this.getLocalName()+" a iniciar...");
 		
@@ -90,7 +90,7 @@ public class Sensor extends Agent
             			}
             			else
             			{
-            				System.out.println("Sensor "+myAgent.getLocalName()+" est· agora online.");
+            				System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
             				reply.setPerformative(ACLMessage.CONFIRM);
             				myAgent.send(reply);
             				setSensorState(true);
@@ -101,7 +101,7 @@ public class Sensor extends Agent
             		{
             			if (isSensorState())
             			{
-            				System.out.println("Sensor "+myAgent.getLocalName()+" est· agora offline.");
+            				System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
             				reply.setPerformative(ACLMessage.CONFIRM);
             				myAgent.send(reply);
             				setSensorState(false);

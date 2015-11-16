@@ -9,6 +9,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.domain.DFService;
 import jade.lang.acl.ACLMessage;
 
 /**
@@ -17,17 +18,22 @@ import jade.lang.acl.ACLMessage;
  */
 public class Interface extends Agent {
 
+    
+    // é preciso adicionar serviços aqui como nos sensores?
     @Override
     protected void setup(){
         super.setup();
-        System.out.println(this.getLocalName()+" a começar!");
+	System.out.println("Agente "+this.getLocalName()+" a iniciar...");
         this.addBehaviour(new ReceiveBehaviour());
-        this.addBehaviour(new NewSendMessage(this,50000));
+        this.addBehaviour(new NewSendMessage(this,20000));
     }
     
     @Override
     protected void takeDown(){
         super.takeDown();
+         try { DFService.deregister(this); }
+         catch (Exception e) {e.printStackTrace();}
+		 
         System.out.println(this.getLocalName()+" a morrer...");
     }
     
@@ -61,7 +67,7 @@ public class Interface extends Agent {
         public void action(){
             ACLMessage msg=receive();
             if(msg!=null){
-                System.out.println("Recebi uma mensagem de "+msg.getSender()+". Conteúdo: "+msg.getContent());
+                System.out.println("Conteúdo: "+msg.getContent());
             }
         }
     }

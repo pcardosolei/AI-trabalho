@@ -8,6 +8,8 @@ package Trabalho;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.lang.acl.ACLMessage;
@@ -23,9 +25,13 @@ public class Interface extends Agent {
     @Override
     protected void setup(){
         super.setup();
-	System.out.println("Agente "+this.getLocalName()+" a iniciar...");
-        this.addBehaviour(new ReceiveBehaviour());
-        this.addBehaviour(new NewSendMessage(this,20000));
+        ParallelBehaviour parallel = new ParallelBehaviour(this,WHEN_ALL);
+	parallel.addSubBehaviour(new ReceiveBehaviour());
+        parallel.addSubBehaviour(new NewSendMessage(this,5000));
+        
+        this.addBehaviour(parallel);
+        System.out.println("Agente "+this.getLocalName()+" a iniciar...");
+        
     }
     
     @Override
@@ -47,15 +53,14 @@ public class Interface extends Agent {
          }
         
         protected void onTick()
-        {
-            
+        {           
             AID receiver = new AID();
             receiver.setLocalName("coordenador");
             
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.setConversationId(""+System.currentTimeMillis());
             msg.addReceiver(receiver);
-            msg.setContent("Qual é a temperatura da casa?");          
+            msg.setContent("value");          
             myAgent.send(msg);
         }
     }
@@ -67,7 +72,7 @@ public class Interface extends Agent {
         public void action(){
             ACLMessage msg=receive();
             if(msg!=null){
-                System.out.println("Conteúdo: "+msg.getContent());
+                System.out.println("Conteúdo: "+msg.getContent()+"C");
             }
         }
     }

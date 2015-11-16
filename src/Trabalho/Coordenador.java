@@ -43,42 +43,48 @@ public class Coordenador extends Agent {
     
     
     private class ReceiveBehaviour extends CyclicBehaviour {
+        @Override
         public void action(){
-            ACLMessage msg=receive();
+           ACLMessage msg=receive();
            if (msg != null)
            { 
                if(msg.getPerformative() == ACLMessage.REQUEST){
                                     
-                   ACLMessage resp = new ACLMessage(ACLMessage.REQUEST);
-                   resp.setConversationId(msg.getConversationId());
-                   if(msg.getContent().equals("online")){ 
-                          
-                        AID [] buyers = searchDF("sensor");
-                        for (int i=0; i<buyers.length; i++){
-                         resp.setContent("online");
-                         resp.addReceiver(buyers[i]);
-                         myAgent.send(resp);
-                        }
-                       
-                   } else if(msg.getContent().equals("offline")){
-                        
-                         
-                        AID [] buyers = searchDF("sensor");
-                        for (int i=0; i<buyers.length; i++){
-                         resp.setContent("offline");
-                         resp.addReceiver(buyers[i]);
-                         myAgent.send(resp);
+                   ACLMessage resp = new ACLMessage(ACLMessage.REQUEST);                   
+                   resp.setConversationId(""+System.currentTimeMillis());
+                   switch (msg.getContent()) {
+                       case "online":
+                           {
+                             AID [] buyers = searchDF("sensor");
+                                for (AID buyer : buyers) {
+                                    resp.setContent("online");
+                                    resp.addReceiver(buyer);
+                                    myAgent.send(resp);
+                                }
+                                break;
+                           }
+                       case "offline":
+                       {
+                           AID [] buyers = searchDF("sensor");
+                                for (AID buyer : buyers) {
+                                    resp.setContent("offline");
+                                    resp.addReceiver(buyer);
+                                    myAgent.send(resp);
+                                }
+                                break;
+                           }
+                       case "value":
+                       {
+                           //perguntar a todos os sensores qual a temperatura
+                           AID [] buyers = searchDF("sensor");
+                                for (AID buyer : buyers) {
+                                    resp.setContent("value");
+                                    resp.addReceiver(buyer);
+                                    myAgent.send(resp);
+                                }
+                               break;
                         }
                    }
-                   else{
-                    //perguntar a todos os sensores qual a temperatura     
-                    AID [] buyers = searchDF("sensor"); 
-                    for (int i=0; i<buyers.length; i++){
-                         resp.setContent("value");
-                         resp.addReceiver(buyers[i]);
-                         myAgent.send(resp);
-                    }
-                }
                }
                else if(msg.getPerformative() == ACLMessage.INFORM){
                    
@@ -86,10 +92,17 @@ public class Coordenador extends Agent {
                    receiver.setLocalName("interface");
                    
                    ACLMessage resp = new ACLMessage(ACLMessage.INFORM);
+                   resp.setConversationId(msg.getConversationId());
                    resp.setContent(msg.getSender().getLocalName() + " " + msg.getContent());
                    resp.addReceiver(receiver);
                    myAgent.send(resp);
                }
+               else
+            	{       
+                        ACLMessage reply = msg.createReply();
+            		reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+            		myAgent.send(reply);
+            	}
             }
            block();    
         }

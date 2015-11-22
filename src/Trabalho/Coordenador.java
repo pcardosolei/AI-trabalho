@@ -54,34 +54,35 @@ public class Coordenador extends Agent {
                    resp.setConversationId(""+System.currentTimeMillis());
                    switch (msg.getContent()) {
                        case "online":
-                           {
+                           { 
+                             resp.setContent("online");
                              AID [] buyers = searchDF("sensor");
-                                for (AID buyer : buyers) {
-                                    resp.setContent("online");
-                                    resp.addReceiver(buyer);
-                                    myAgent.send(resp);
+                                for (AID buyer : buyers) {                                  
+                                    resp.addReceiver(buyer);                                    
                                 }
+                                myAgent.send(resp);
                                 break;
                            }
                        case "offline":
-                       {
+                       {   
+                           resp.setContent("offline");
                            AID [] buyers = searchDF("sensor");
                                 for (AID buyer : buyers) {
-                                    resp.setContent("offline");
-                                    resp.addReceiver(buyer);
-                                    myAgent.send(resp);
+                                    resp.addReceiver(buyer);                                   
                                 }
+                                myAgent.send(resp);
                                 break;
                            }
                        case "value":
                        {
                            //perguntar a todos os sensores qual a temperatura
+                           
+                           resp.setContent("value");
                            AID [] buyers = searchDF("sensor");
                                 for (AID buyer : buyers) {
-                                    resp.setContent("value");
                                     resp.addReceiver(buyer);
-                                    myAgent.send(resp);
-                                }
+                                    }
+                                myAgent.send(resp);                               
                                break;
                         }
                    }

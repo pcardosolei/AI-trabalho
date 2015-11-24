@@ -9,6 +9,9 @@ package Trabalho;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
@@ -27,18 +30,32 @@ public class Coordenador extends Agent {
      @Override
     protected void setup(){
         super.setup();
-        System.out.println("Agente "+this.getLocalName()+" a iniciar...");      
-        this.addBehaviour(new ReceiveBehaviour());
+		
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setName(getLocalName());
+		sd.setType("coordenador");
+		dfd.addServices(sd);
+            				
+		try{ DFService.register(this, dfd );}
+                    catch (FIPAException fe) { fe.printStackTrace(); }
+		
+		System.out.println("Agente "+this.getLocalName()+" a iniciar...");
+		ParallelBehaviour parallel = new ParallelBehaviour(this,WHEN_ALL);
+                parallel.addSubBehaviour(new ReceiveBehaviour());     
+                this.addBehaviour(parallel);
     }
     
     @Override
     protected void takeDown(){
-        super.takeDown();
-         try { DFService.deregister(this); }
+      	super.takeDown();
+		
+		 try { DFService.deregister(this); }
          catch (Exception e) {e.printStackTrace();}
 		 
-        System.out.println(this.getLocalName()+" a morrer...");
-    }
+		 System.out.println("A remover registo de serviços...");
+	 }
     
     
     
@@ -72,19 +89,7 @@ public class Coordenador extends Agent {
                                 }
                                 myAgent.send(resp);
                                 break;
-                           }
-                       case "value":
-                       {
-                           //perguntar a todos os sensores qual a temperatura
-                           
-                           resp.setContent("value");
-                           AID [] buyers = searchDF("sensor");
-                                for (AID buyer : buyers) {
-                                    resp.addReceiver(buyer);
-                                    }
-                                myAgent.send(resp);                               
-                               break;
-                        }
+                           }      
                    }
                }
                else if(msg.getPerformative() == ACLMessage.INFORM){
@@ -109,6 +114,31 @@ public class Coordenador extends Agent {
         }
     }
     
+     private class VerificaSeguranca extends TickerBehaviour
+      {
+      
+          public VerificaSeguranca(Agent a, long timeout)
+        {   
+            super(a,timeout);
+         }
+        
+        protected void onTick()
+        {   
+            AID receiver = new AID();
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);            
+            msg.setConversationId(""+System.currentTimeMillis());      
+            msg.setContent("value");          
+            
+            AID [] distancias = searchDF("distancia");
+            for (AID distancia : distancias) {
+                msg.addReceiver(distancia);
+                }
+                myAgent.send(msg); 
+            
+            
+            
+        }
+    }
     
 	AID [] searchDF( String service )
 //  ---------------------------------

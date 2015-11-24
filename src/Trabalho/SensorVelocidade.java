@@ -26,7 +26,8 @@ public class SensorVelocidade extends Agent {
 	private boolean sensorState = false;
 	private boolean finished = false;
         private int velocidade;
-	
+	private boolean atravar = false;
+                
 	@Override
 	protected void takeDown() {
 		super.takeDown();
@@ -87,8 +88,12 @@ public class SensorVelocidade extends Agent {
         
         protected void onTick()
         {           
-            velocidade += new Random().nextInt() % 5;
-            //meter aqui um if
+            if(atravar)
+                velocidade -= Math.abs(new Random().nextInt() % 10);
+            else if(!atravar)
+                velocidade += new Random().nextInt();
+            if(velocidade < 0)
+                velocidade = 0;
         }
     }
 

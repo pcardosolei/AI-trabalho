@@ -5,7 +5,6 @@
  */
 package Trabalho;
 
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
@@ -27,7 +26,8 @@ public class SensorDistancia extends Agent {
 	private boolean sensorState = false;
 	private boolean finished = false;
         private int distancia;
-	
+	private boolean atravar = false;
+        
 	@Override
 	protected void takeDown() {
 		super.takeDown();
@@ -46,7 +46,7 @@ public class SensorDistancia extends Agent {
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
 		sd.setName(getLocalName());
-		sd.setType("sensor");
+		sd.setType("distancia");
 		dfd.addServices(sd);
 		distancia = Math.abs(new Random().nextInt() % 100);
             				
@@ -69,7 +69,15 @@ public class SensorDistancia extends Agent {
 	public void setSensorState(boolean sensorState) {
 		this.sensorState = sensorState;
 	}
-
+        
+        public boolean isTravar(){
+            return atravar;
+        }
+        
+        public void setTravar(boolean atravar){
+            this.atravar = atravar;
+        }
+        
 	public boolean isFinished() {
 		return finished;
 	}
@@ -87,9 +95,16 @@ public class SensorDistancia extends Agent {
          }
         
         protected void onTick()
-        {           
+        {   
+            if(!atravar){
             distancia += new Random().nextInt() % 5;
-            //meter aqui um if
+            } else if(atravar){
+                distancia +=  Math.abs(new Random().nextInt() % 12);
+            }
+            
+            //just in case para a simulação
+           // if(distancia < 0)
+                //bateu de frente     
         }
     }
 
@@ -152,9 +167,39 @@ public class SensorDistancia extends Agent {
             					reply.setContent(""+distancia);
             					reply.setPerformative(ACLMessage.INFORM);
             					myAgent.send(reply);
-                                	}
-                               
-                            }
+                                	}   
+                                }
+                                if(msg.getContent().equals("travar"))
+                                {
+                                    if(isSensorState()) //ver se ja esta a travar
+                                    {
+                                        setTravar(true);
+                                        System.out.println("Sensor "+myAgent.getLocalName()+" a travar");
+                                        reply.setPerformative(ACLMessage.INFORM);
+                                        myAgent.send(reply);
+                                        
+                                    }
+                                    else
+                                    {
+                                       reply.setPerformative(ACLMessage.FAILURE);
+                                       myAgent.send(reply); 
+                                    }
+                                }
+                                if(msg.getContent().equals("descansar"))
+                                {
+                                    if(isSensorState()){
+                                        setTravar(false);
+                                        System.out.println("Sensor"+myAgent.getLocalName()+" parou de travar");
+                                        reply.setPerformative(ACLMessage.INFORM);
+                                        myAgent.send(reply);
+                                        
+                                    }
+                                    else
+                                    {
+                                       reply.setPerformative(ACLMessage.FAILURE);
+                                       myAgent.send(reply); 
+                                    }
+                                }
                         else
                         {
                                 reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);

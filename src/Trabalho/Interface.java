@@ -72,7 +72,7 @@ public class Interface extends Agent {
         public void action(){
             ACLMessage msg=receive();
             if(msg!=null){
-                System.out.println("Conteúdo: "+msg.getContent()+"C");
+                System.out.println("Conteúdo: "+msg.getContent()+"Km");
             }
         }
     }

@@ -26,10 +26,10 @@ import jade.lang.acl.ACLMessage;
 public class CoordenadorTravao extends Agent {
     
     private static final long serialVersionUID = 1L;
-    private boolean sensorState = false;
+    private boolean sensorState = true; //depois meter a falso
     private boolean finished = false;     
-    private static int distancia = 1; //considero apenas 1 distancia
-    private static int velocidade = 1; //considero apenas 1 velocidade
+    private static int distancia = 1; //distancia naquele segundo
+    private static int velocidade = 1; //velocidade instantanea
     private static boolean atravar = false;
     
     @Override
@@ -80,6 +80,7 @@ public class CoordenadorTravao extends Agent {
 		this.finished = finished;
 	}    
     
+        //falta o offline
     private class ReceiveBehaviour extends CyclicBehaviour {
         
         @Override
@@ -129,8 +130,6 @@ public class CoordenadorTravao extends Agent {
                        }catch(Exception e){
                            
                        }
-                   case "online":
-                       
                    default: 
                        break;            
                 }
@@ -178,7 +177,6 @@ public class CoordenadorTravao extends Agent {
             }
            } else if(atravar){
               if(velocidade*1.1/distancia > 1){
-                  AID receiver = new AID();
                   
                   ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                   msg.setContent("descansar");

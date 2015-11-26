@@ -5,6 +5,7 @@
  */
 package Trabalho;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
@@ -12,6 +13,7 @@ import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
@@ -23,7 +25,7 @@ import java.util.Random;
  */
 public class SensorVelocidade extends Agent {
      private static final long serialVersionUID = 1L;
-	private boolean sensorState = false;
+	private boolean sensorState = true; //depois meter a falso
 	private boolean finished = false;
         private int velocidade;
 	private boolean atravar = false;
@@ -48,7 +50,7 @@ public class SensorVelocidade extends Agent {
 		sd.setName(getLocalName());
 		sd.setType("velocidade");
 		dfd.addServices(sd);
-		velocidade = Math.abs(new Random().nextInt() % 100);
+		velocidade = Math.abs(new Random().nextInt() % 10) + 10;
             				
 		try{ DFService.register(this, dfd );}
                     catch (FIPAException fe) { fe.printStackTrace(); }
@@ -56,7 +58,7 @@ public class SensorVelocidade extends Agent {
 		System.out.println("Agente "+this.getLocalName()+" a iniciar...");
 		ParallelBehaviour parallel = new ParallelBehaviour(this,WHEN_ALL);
                 parallel.addSubBehaviour(new ReceiveBehaviour());
-                parallel.addSubBehaviour(new CalculaDistancia(this,1000));
+                parallel.addSubBehaviour(new CalculaVelocidade(this,1000));
         
                 this.addBehaviour(parallel);
         
@@ -78,10 +80,18 @@ public class SensorVelocidade extends Agent {
 		this.finished = finished;
 	}
         
-      private class CalculaDistancia extends TickerBehaviour
+        public boolean isTravar(){
+            return atravar;
+        }
+        
+        public void setTravar(boolean atravar){
+            this.atravar = atravar;
+        }
+        
+      private class CalculaVelocidade extends TickerBehaviour
       {
       
-          public CalculaDistancia(Agent a, long timeout)
+          public CalculaVelocidade(Agent a, long timeout)
         {   
             super(a,timeout);
          }
@@ -89,12 +99,22 @@ public class SensorVelocidade extends Agent {
         protected void onTick()
         {           
             if(atravar)
-                velocidade -= Math.abs(new Random().nextInt() % 10);
+                velocidade -= Math.abs(new Random().nextInt(15) + 5 );
             else if(!atravar)
-                velocidade += new Random().nextInt();
+                velocidade += new Random().nextInt(16) - 8;
             if(velocidade < 0)
                 velocidade = 0;
-        }
+        
+        
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.setConversationId(""+System.currentTimeMillis());
+            msg.setContent("velocidade "+velocidade);
+            AID [] distancia = searchDF("coordenadortravao");
+            for(AID sensor : distancia){
+                msg.addReceiver(sensor);
+                }
+            myAgent.send(msg);
+            }
     }
 
 	private class ReceiveBehaviour extends CyclicBehaviour
@@ -153,12 +173,38 @@ public class SensorVelocidade extends Agent {
                                 {
                                     if (isSensorState())
                                     {
-            					reply.setContent(""+velocidade);
+            					reply.setContent("velocidade "+velocidade);
             					reply.setPerformative(ACLMessage.INFORM);
             					myAgent.send(reply);
                                 	}
                                
                             }
+                                if(msg.getContent().equals("travar"))
+                                {
+                                    if(isSensorState()) //ver se ja esta a travar
+                                    {
+                                        setTravar(true);
+                                        System.out.println("Sensor "+myAgent.getLocalName()+" a travar");
+                                        reply.setPerformative(ACLMessage.INFORM);
+                                        myAgent.send(reply);
+                                        
+                                    }
+                                    else
+                                    {
+                                       reply.setPerformative(ACLMessage.FAILURE);
+                                       myAgent.send(reply); 
+                                    }
+                                }
+                                if(msg.getContent().equals("descansar"))
+                                {
+                                    if(isSensorState()){
+                                        setTravar(false);
+                                        System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
+                                        reply.setPerformative(ACLMessage.INFORM);
+                                        myAgent.send(reply);
+                                        
+                                    }
+                                }
                         else
                         {
                                 reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
@@ -172,6 +218,31 @@ public class SensorVelocidade extends Agent {
                         }
                 }
 }
+        
+	AID [] searchDF( String service )
+//  ---------------------------------
+	{
+		DFAgentDescription dfd = new DFAgentDescription();
+   		ServiceDescription sd = new ServiceDescription();
+   		sd.setType( service );
+		dfd.addServices(sd);
+		
+		SearchConstraints ALL = new SearchConstraints();
+		ALL.setMaxResults(new Long(-1));
+
+		try
+		{
+			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+			AID[] agents = new AID[result.length];
+			for (int i=0; i<result.length; i++) 
+				agents[i] = result[i].getName() ;
+			return agents;
+
+		}
+        catch (FIPAException fe) { fe.printStackTrace(); }
+        
+      	return null;
+	}
 }  
 
 

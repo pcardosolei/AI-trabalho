@@ -19,7 +19,7 @@ import jade.lang.acl.ACLMessage;
  */
 public class SensorTravao extends Agent{
         private static final long serialVersionUID = 1L;
-	private boolean sensorState = false;
+	private boolean sensorState = true; //depois meter a true
 	private boolean finished = false;
         private boolean travar = false;
 	
@@ -146,7 +146,7 @@ public class SensorTravao extends Agent{
                                 if(msg.getContent().equals("descansar"))
                                 {
                                     if(isSensorState()){
-                                        System.out.println("Sensor"+myAgent.getLocalName()+" parou de travar");
+                                        System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
                                         reply.setPerformative(ACLMessage.CONFIRM);
                                         myAgent.send(reply);
                                         setTravar(false);

@@ -70,10 +70,7 @@ public class Interface extends Agent {
     private class ReceiveBehaviour extends CyclicBehaviour{
         @Override
         public void action(){
-            ACLMessage msg=receive();
-            if(msg!=null){
-                System.out.println("Conteúdo: "+msg.getContent()+"C");
-            }
+          
         }
     }
 }

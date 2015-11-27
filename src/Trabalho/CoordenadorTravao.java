@@ -26,10 +26,10 @@ import jade.lang.acl.ACLMessage;
 public class CoordenadorTravao extends Agent {
     
     private static final long serialVersionUID = 1L;
-    private boolean sensorState = false;
+    private boolean sensorState = true; //depois meter a falso
     private boolean finished = false;     
-    private static int distancia = 1; //considero apenas 1 distancia
-    private static int velocidade = 1; //considero apenas 1 velocidade
+    private static int distancia = 1; //distancia naquele segundo
+    private static int velocidade = 1; //velocidade instantanea
     private static boolean atravar = false;
     
     @Override
@@ -80,6 +80,7 @@ public class CoordenadorTravao extends Agent {
 		this.finished = finished;
 	}    
     
+        //falta o offline
     private class ReceiveBehaviour extends CyclicBehaviour {
         
         @Override
@@ -117,7 +118,7 @@ public class CoordenadorTravao extends Agent {
                switch(partes[0]){
                    case "distancia":
                        try{
-                       distancia = Integer.parseInt(partes[1]);
+                       distancia = Integer.parseInt(partes[1]); 
                        }catch(Exception e){
                            
                        }
@@ -129,8 +130,6 @@ public class CoordenadorTravao extends Agent {
                        }catch(Exception e){
                            
                        }
-                   case "online":
-                       
                    default: 
                        break;            
                 }
@@ -162,31 +161,51 @@ public class CoordenadorTravao extends Agent {
         
         protected void onTick()
         {   
+           float criterio = (float)distancia/velocidade;
+           System.out.println("distancia "+distancia+"/"+velocidade+" velocidade");
            if(!atravar){
-            
-            if(velocidade*1.1/distancia <0){
-                 AID receiver = new AID();
-
+            if(criterio < 1.5){
+                 
                  ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                  msg.setContent("travar");
+                 /*
                  AID [] travoes = searchDF("travao");
                  for (AID travao : travoes) {
                     msg.addReceiver(travao);
+                 }
+                AID [] sdistancias = searchDF("distancia");
+                for(AID sdistancia : sdistancias){
+                    msg.addReceiver(sdistancia);
+                }
+                AID [] svelocidades = searchDF("velocidade");
+                for(AID svelocidade: svelocidades){
+                    msg.addReceiver(svelocidade);
+                }
+                         */
+                 AID [] todos = searchDFtypes("travao velocidade distancia"); //este nao esta a dar
+                 for(AID sensor: todos){
+                     msg.addReceiver(sensor);
                  }
                  myAgent.send(msg); 
                  atravar = true;
             }
            } else if(atravar){
-              if(velocidade*1.1/distancia > 1){
-                  AID receiver = new AID();
+              if(criterio > 2){
                   
                   ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                   msg.setContent("descansar");
                   AID [] travoes = searchDF("travao");
                   for(AID travao: travoes){
-                      msg.addReceiver(travao);
-                      
+                      msg.addReceiver(travao);                    
                   }
+                  AID [] sdistancias = searchDF("distancia");
+                for(AID sdistancia : sdistancias){
+                    msg.addReceiver(sdistancia);
+                }
+                AID [] svelocidades = searchDF("velocidade");
+                for(AID svelocidade: svelocidades){
+                    msg.addReceiver(svelocidade);
+                }
                   myAgent.send(msg);
                   atravar= false;
               } 
@@ -218,4 +237,28 @@ public class CoordenadorTravao extends Agent {
                 catch (FIPAException fe) { fe.printStackTrace(); }  
             return null;
 	}
+        
+        AID [] searchDFtypes ( String service ){
+                DFAgentDescription dfd = new DFAgentDescription();
+   		ServiceDescription sd = new ServiceDescription();
+                String[] services = service.split(" ");
+                for(int i=0;i<services.length;i++){
+                    sd.setType(services[i]);
+                }
+		dfd.addServices(sd);
+		
+		SearchConstraints ALL = new SearchConstraints();
+		ALL.setMaxResults(new Long(-1));
+		try
+		{
+			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+			AID[] agents = new AID[result.length];
+			for (int i=0; i<result.length; i++) 
+				agents[i] = result[i].getName() ;
+			return agents;
+
+		}
+                catch (FIPAException fe) { fe.printStackTrace(); }  
+            return null;
+        }
     }

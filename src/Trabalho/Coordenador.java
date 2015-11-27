@@ -73,11 +73,15 @@ public class Coordenador extends Agent {
                        case "online":
                            { 
                              resp.setContent("online");
-                             AID [] buyers = searchDF("sensor");
-                                for (AID buyer : buyers) {                                  
-                                    resp.addReceiver(buyer);                                    
-                                }
-                                myAgent.send(resp);
+                             AID [] distancia = searchDF("distancia");
+                                for(AID sensor : distancia){
+                                    resp.addReceiver(sensor);
+                                     }
+                             AID [] velocidade = searchDF("velocidade");
+                                for(AID sensor : velocidade){
+                                    resp.addReceiver(sensor);
+                                    }
+                                 myAgent.send(resp);
                                 break;
                            }
                        case "offline":
@@ -89,7 +93,19 @@ public class Coordenador extends Agent {
                                 }
                                 myAgent.send(resp);
                                 break;
-                           }      
+                           }    
+                       case "value":
+                           resp.setContent("value");
+                           AID [] distancia = searchDF("distancia");
+                           for(AID sensor : distancia){
+                               resp.addReceiver(sensor);
+                           }
+                          AID [] velocidade = searchDF("velocidade");
+                           for(AID sensor : velocidade){
+                               resp.addReceiver(sensor);
+                           }
+                           myAgent.send(resp);
+                           break;
                    }
                }
                else if(msg.getPerformative() == ACLMessage.INFORM){
@@ -99,7 +115,7 @@ public class Coordenador extends Agent {
                    
                    ACLMessage resp = new ACLMessage(ACLMessage.INFORM);
                    resp.setConversationId(msg.getConversationId());
-                   resp.setContent(msg.getSender().getLocalName() + " " + msg.getContent());
+                   resp.setContent(msg.getContent());
                    resp.addReceiver(receiver);
                    myAgent.send(resp);
                }

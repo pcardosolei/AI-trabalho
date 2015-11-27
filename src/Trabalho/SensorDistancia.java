@@ -5,6 +5,7 @@
  */
 package Trabalho;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
@@ -12,6 +13,7 @@ import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
@@ -22,8 +24,8 @@ import java.util.Random;
  * @author PauloCardoso
  */
 public class SensorDistancia extends Agent {
-    private static final long serialVersionUID = 1L;
-	private boolean sensorState = false;
+        private static final long serialVersionUID = 1L;
+	private boolean sensorState = true; //depois meter a falso;
 	private boolean finished = false;
         private int distancia;
 	private boolean atravar = false;
@@ -97,14 +99,26 @@ public class SensorDistancia extends Agent {
         protected void onTick()
         {   
             if(!atravar){
-            distancia += new Random().nextInt() % 5;
+            distancia += new Random().nextInt(16) - 8;
             } else if(atravar){
-                distancia +=  Math.abs(new Random().nextInt() % 12);
+                distancia +=  Math.abs(new Random().nextInt(7) );
             }
             
-            //just in case para a simulação
-           // if(distancia < 0)
-                //bateu de frente     
+            if(distancia < 0){
+                distancia = 0;  //bateu de frente 
+            }
+            
+           
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.setConversationId(""+System.currentTimeMillis());
+            msg.setContent("distancia "+distancia);
+            AID [] distancia = searchDF("coordenadortravao");
+            for(AID sensor : distancia){
+                msg.addReceiver(sensor);
+                }
+            myAgent.send(msg);
+            
+                   
         }
     }
 
@@ -164,7 +178,7 @@ public class SensorDistancia extends Agent {
                                 {
                                     if (isSensorState())
                                     {
-            					reply.setContent(""+distancia);
+            					reply.setContent("distancia "+distancia);
             					reply.setPerformative(ACLMessage.INFORM);
             					myAgent.send(reply);
                                 	}   
@@ -189,7 +203,7 @@ public class SensorDistancia extends Agent {
                                 {
                                     if(isSensorState()){
                                         setTravar(false);
-                                        System.out.println("Sensor"+myAgent.getLocalName()+" parou de travar");
+                                        System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
                                         
@@ -213,4 +227,30 @@ public class SensorDistancia extends Agent {
                         }
                 }
 }
+        
+        
+	AID [] searchDF( String service )
+//  ---------------------------------
+	{
+		DFAgentDescription dfd = new DFAgentDescription();
+   		ServiceDescription sd = new ServiceDescription();
+   		sd.setType( service );
+		dfd.addServices(sd);
+		
+		SearchConstraints ALL = new SearchConstraints();
+		ALL.setMaxResults(new Long(-1));
+
+		try
+		{
+			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+			AID[] agents = new AID[result.length];
+			for (int i=0; i<result.length; i++) 
+				agents[i] = result[i].getName() ;
+			return agents;
+
+		}
+        catch (FIPAException fe) { fe.printStackTrace(); }
+        
+      	return null;
+	}
 }  

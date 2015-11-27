@@ -101,7 +101,7 @@ public class SensorVelocidade extends Agent {
             if(atravar)
                 velocidade -= Math.abs(new Random().nextInt(15) + 5 );
             else if(!atravar)
-                velocidade += new Random().nextInt(16) - 8;
+                velocidade += Math.abs(new Random().nextInt(16));
             if(velocidade < 0)
                 velocidade = 0;
         

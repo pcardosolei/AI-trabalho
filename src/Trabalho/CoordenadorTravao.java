@@ -162,15 +162,29 @@ public class CoordenadorTravao extends Agent {
         protected void onTick()
         {   
            float criterio = (float)distancia/velocidade;
-           System.out.println(criterio);
+           System.out.println("distancia "+distancia+"/"+velocidade+" velocidade");
            if(!atravar){
-            if(criterio < 1){
+            if(criterio < 1.5){
                  
                  ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                  msg.setContent("travar");
+                 /*
                  AID [] travoes = searchDF("travao");
                  for (AID travao : travoes) {
                     msg.addReceiver(travao);
+                 }
+                AID [] sdistancias = searchDF("distancia");
+                for(AID sdistancia : sdistancias){
+                    msg.addReceiver(sdistancia);
+                }
+                AID [] svelocidades = searchDF("velocidade");
+                for(AID svelocidade: svelocidades){
+                    msg.addReceiver(svelocidade);
+                }
+                         */
+                 AID [] todos = searchDFtypes("travao velocidade distancia"); //este nao esta a dar
+                 for(AID sensor: todos){
+                     msg.addReceiver(sensor);
                  }
                  myAgent.send(msg); 
                  atravar = true;
@@ -182,9 +196,16 @@ public class CoordenadorTravao extends Agent {
                   msg.setContent("descansar");
                   AID [] travoes = searchDF("travao");
                   for(AID travao: travoes){
-                      msg.addReceiver(travao);
-                      
+                      msg.addReceiver(travao);                    
                   }
+                  AID [] sdistancias = searchDF("distancia");
+                for(AID sdistancia : sdistancias){
+                    msg.addReceiver(sdistancia);
+                }
+                AID [] svelocidades = searchDF("velocidade");
+                for(AID svelocidade: svelocidades){
+                    msg.addReceiver(svelocidade);
+                }
                   myAgent.send(msg);
                   atravar= false;
               } 
@@ -216,4 +237,28 @@ public class CoordenadorTravao extends Agent {
                 catch (FIPAException fe) { fe.printStackTrace(); }  
             return null;
 	}
+        
+        AID [] searchDFtypes ( String service ){
+                DFAgentDescription dfd = new DFAgentDescription();
+   		ServiceDescription sd = new ServiceDescription();
+                String[] services = service.split(" ");
+                for(int i=0;i<services.length;i++){
+                    sd.setType(services[i]);
+                }
+		dfd.addServices(sd);
+		
+		SearchConstraints ALL = new SearchConstraints();
+		ALL.setMaxResults(new Long(-1));
+		try
+		{
+			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+			AID[] agents = new AID[result.length];
+			for (int i=0; i<result.length; i++) 
+				agents[i] = result[i].getName() ;
+			return agents;
+
+		}
+                catch (FIPAException fe) { fe.printStackTrace(); }  
+            return null;
+        }
     }

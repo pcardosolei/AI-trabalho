@@ -118,7 +118,7 @@ public class CoordenadorTravao extends Agent {
                switch(partes[0]){
                    case "distancia":
                        try{
-                       distancia = Integer.parseInt(partes[1]);
+                       distancia = Integer.parseInt(partes[1]); 
                        }catch(Exception e){
                            
                        }
@@ -161,11 +161,11 @@ public class CoordenadorTravao extends Agent {
         
         protected void onTick()
         {   
+           float criterio = (float)distancia/velocidade;
+           System.out.println(criterio);
            if(!atravar){
-            
-            if(velocidade*1.1/distancia <0){
-                 AID receiver = new AID();
-
+            if(criterio < 1){
+                 
                  ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                  msg.setContent("travar");
                  AID [] travoes = searchDF("travao");
@@ -176,7 +176,7 @@ public class CoordenadorTravao extends Agent {
                  atravar = true;
             }
            } else if(atravar){
-              if(velocidade*1.1/distancia > 1){
+              if(criterio > 2){
                   
                   ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                   msg.setContent("descansar");

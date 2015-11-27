@@ -24,7 +24,7 @@ import java.util.Random;
  * @author PauloCardoso
  */
 public class SensorDistancia extends Agent {
-    private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 	private boolean sensorState = true; //depois meter a falso;
 	private boolean finished = false;
         private int distancia;
@@ -101,7 +101,7 @@ public class SensorDistancia extends Agent {
             if(!atravar){
             distancia += new Random().nextInt(16) - 8;
             } else if(atravar){
-                distancia +=  Math.abs(new Random().nextInt(10) + 5);
+                distancia +=  Math.abs(new Random().nextInt(7) );
             }
             
             if(distancia < 0){

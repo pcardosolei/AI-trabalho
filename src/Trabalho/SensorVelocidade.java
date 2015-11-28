@@ -24,8 +24,8 @@ import java.util.Random;
  * @author PauloCardoso
  */
 public class SensorVelocidade extends Agent {
-     private static final long serialVersionUID = 1L;
-	private boolean sensorState = true; //depois meter a falso
+        private static final long serialVersionUID = 1L; //Usamos isto para alguma coisa?
+	private boolean sensorState = false; //depois meter a falso
 	private boolean finished = false;
         private int velocidade;
 	private boolean atravar = false;
@@ -106,7 +106,7 @@ public class SensorVelocidade extends Agent {
                 velocidade = 0;
         
         
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.setConversationId(""+System.currentTimeMillis());
             msg.setContent("velocidade "+velocidade);
             AID [] distancia = searchDF("coordenadortravao");
@@ -181,10 +181,9 @@ public class SensorVelocidade extends Agent {
                             }
                                 if(msg.getContent().equals("travar"))
                                 {
-                                    if(isSensorState()) //ver se ja esta a travar
+                                    if(isSensorState()) 
                                     {
                                         setTravar(true);
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a travar");
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
                                         
@@ -199,7 +198,6 @@ public class SensorVelocidade extends Agent {
                                 {
                                     if(isSensorState()){
                                         setTravar(false);
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
                                         

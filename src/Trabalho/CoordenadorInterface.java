@@ -11,19 +11,19 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
 import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
-import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import java.util.ArrayList;
 
 /**
  *
  * @author PauloCardoso
  */
-public class Coordenador extends Agent {
+public class CoordenadorInterface extends Agent {
     
      
     // é preciso adicionar serviços aqui como nos sensores?
@@ -73,37 +73,29 @@ public class Coordenador extends Agent {
                        case "online":
                            { 
                              resp.setContent("online");
-                             AID [] distancia = searchDF("distancia");
-                                for(AID sensor : distancia){
+                             ArrayList<AID> agents = searchDFtypes("coordenadortravao distancia travao velocidade");
+                                for(AID sensor : agents){
                                     resp.addReceiver(sensor);
-                                     }
-                             AID [] velocidade = searchDF("velocidade");
-                                for(AID sensor : velocidade){
-                                    resp.addReceiver(sensor);
-                                    }
+                                }           
                                  myAgent.send(resp);
                                 break;
                            }
                        case "offline":
                        {   
                            resp.setContent("offline");
-                           AID [] buyers = searchDF("sensor");
-                                for (AID buyer : buyers) {
-                                    resp.addReceiver(buyer);                                   
-                                }
+                           ArrayList<AID> agents = searchDFtypes("coordenadortravao distancia travao velocidade");
+                                for(AID sensor : agents){
+                                    resp.addReceiver(sensor);
+                                }         
                                 myAgent.send(resp);
                                 break;
                            }    
                        case "value":
                            resp.setContent("value");
-                           AID [] distancia = searchDF("distancia");
-                           for(AID sensor : distancia){
-                               resp.addReceiver(sensor);
-                           }
-                          AID [] velocidade = searchDF("velocidade");
-                           for(AID sensor : velocidade){
-                               resp.addReceiver(sensor);
-                           }
+                           ArrayList<AID> agents = searchDFtypes("distancia velocidade");
+                                for(AID sensor : agents){
+                                    resp.addReceiver(sensor);
+                                }         
                            myAgent.send(resp);
                            break;
                    }
@@ -130,31 +122,9 @@ public class Coordenador extends Agent {
         }
     }
     
-     private class VerificaSeguranca extends TickerBehaviour
-      {
-      
-          public VerificaSeguranca(Agent a, long timeout)
-        {   
-            super(a,timeout);
-         }
-        
-        protected void onTick()
-        {   
-            AID receiver = new AID();
-            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);            
-            msg.setConversationId(""+System.currentTimeMillis());      
-            msg.setContent("value");          
-            
-            AID [] distancias = searchDF("distancia");
-            for (AID distancia : distancias) {
-                msg.addReceiver(distancia);
-                }
-                myAgent.send(msg); 
-            
-            
-            
-        }
-    }
+     /*
+      SÓ UM TIPO DE SENSOR
+     */
     
 	AID [] searchDF( String service )
 //  ---------------------------------
@@ -180,10 +150,33 @@ public class Coordenador extends Agent {
         
       	return null;
 	}
+        /*
+        ---- MAIS DO QUE UM TIPO DE SENSOR
+        */
+        
+          ArrayList<AID> searchDFtypes ( String service ){
+                DFAgentDescription dfd = new DFAgentDescription();
+   		ServiceDescription sd = new ServiceDescription();
+                String[] services = service.split(" ");
+                try
+		{
+                ArrayList<AID> agents = new ArrayList<>();
+                for(int j=0;j<services.length;j++){
+                    sd.setType(services[j]);
+                    dfd.addServices(sd);
+                    SearchConstraints ALL = new SearchConstraints();
+                    ALL.setMaxResults(new Long(-1));
+		
+                    DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+                    for (int i=0; i<result.length; i++) 
+                        agents.add(result[i].getName());
+                }
+            	return agents;
+            } catch (FIPAException fe) { fe.printStackTrace(); }  
+            return null;
+        }
 }
 
 
-    
-    
-//java -cp Desktop/jade/lib/jade.jar jade.Boot -gui
+
 

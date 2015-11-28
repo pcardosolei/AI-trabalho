@@ -19,7 +19,7 @@ import jade.lang.acl.ACLMessage;
  */
 public class SensorTravao extends Agent{
         private static final long serialVersionUID = 1L;
-	private boolean sensorState = true; //depois meter a true
+	private boolean sensorState = false; //depois meter a true
 	private boolean finished = false;
         private boolean travar = false;
 	

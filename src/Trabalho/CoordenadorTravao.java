@@ -18,6 +18,7 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import java.util.ArrayList;
 
 /**
  *
@@ -132,8 +133,7 @@ public class CoordenadorTravao extends Agent {
                        }
                    default: 
                        break;            
-                }
-               
+               }              
                reply.setPerformative(ACLMessage.CONFIRM);
                myAgent.send(reply);
                 }
@@ -162,29 +162,15 @@ public class CoordenadorTravao extends Agent {
         protected void onTick()
         {   
            float criterio = (float)distancia/velocidade;
-           System.out.println("distancia "+distancia+"/"+velocidade+" velocidade");
            if(!atravar){
             if(criterio < 1.5){
                  
                  ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                  msg.setContent("travar");
-                 /*
-                 AID [] travoes = searchDF("travao");
-                 for (AID travao : travoes) {
-                    msg.addReceiver(travao);
-                 }
-                AID [] sdistancias = searchDF("distancia");
-                for(AID sdistancia : sdistancias){
-                    msg.addReceiver(sdistancia);
-                }
-                AID [] svelocidades = searchDF("velocidade");
-                for(AID svelocidade: svelocidades){
-                    msg.addReceiver(svelocidade);
-                }
-                         */
-                 AID [] todos = searchDFtypes("travao velocidade distancia"); //este nao esta a dar
-                 for(AID sensor: todos){
-                     msg.addReceiver(sensor);
+                 //pesquisa de todos os agents para travar
+                 ArrayList<AID> agents = searchDFtypes("travao velocidade distancia"); 
+                 for(AID sensor: agents){
+                      msg.addReceiver(sensor);
                  }
                  myAgent.send(msg); 
                  atravar = true;
@@ -194,18 +180,10 @@ public class CoordenadorTravao extends Agent {
                   
                   ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                   msg.setContent("descansar");
-                  AID [] travoes = searchDF("travao");
-                  for(AID travao: travoes){
-                      msg.addReceiver(travao);                    
-                  }
-                  AID [] sdistancias = searchDF("distancia");
-                for(AID sdistancia : sdistancias){
-                    msg.addReceiver(sdistancia);
-                }
-                AID [] svelocidades = searchDF("velocidade");
-                for(AID svelocidade: svelocidades){
-                    msg.addReceiver(svelocidade);
-                }
+                  ArrayList<AID> agents = searchDFtypes("travao velocidade distancia");   
+                  for(AID sensor: agents){
+                      msg.addReceiver(sensor);
+                 }
                   myAgent.send(msg);
                   atravar= false;
               } 
@@ -213,6 +191,9 @@ public class CoordenadorTravao extends Agent {
            }
         }
     }
+      /*
+      SÓ UM TIPO DE SENSOR
+     */
     
 	AID [] searchDF( String service )
 //  ---------------------------------
@@ -234,31 +215,33 @@ public class CoordenadorTravao extends Agent {
 			return agents;
 
 		}
-                catch (FIPAException fe) { fe.printStackTrace(); }  
-            return null;
-	}
+        catch (FIPAException fe) { fe.printStackTrace(); }
         
-        AID [] searchDFtypes ( String service ){
+      	return null;
+	}
+        /*
+        ---- MAIS DO QUE UM TIPO DE SENSOR
+        */
+        
+          ArrayList<AID> searchDFtypes ( String service ){
                 DFAgentDescription dfd = new DFAgentDescription();
    		ServiceDescription sd = new ServiceDescription();
                 String[] services = service.split(" ");
-                for(int i=0;i<services.length;i++){
-                    sd.setType(services[i]);
-                }
-		dfd.addServices(sd);
-		
-		SearchConstraints ALL = new SearchConstraints();
-		ALL.setMaxResults(new Long(-1));
-		try
+                try
 		{
-			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
-			AID[] agents = new AID[result.length];
-			for (int i=0; i<result.length; i++) 
-				agents[i] = result[i].getName() ;
-			return agents;
-
-		}
-                catch (FIPAException fe) { fe.printStackTrace(); }  
+                ArrayList<AID> agents = new ArrayList<>();
+                for(int j=0;j<services.length;j++){
+                    sd.setType(services[j]);
+                    dfd.addServices(sd);
+                    SearchConstraints ALL = new SearchConstraints();
+                    ALL.setMaxResults(new Long(-1));
+		
+                    DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+                    for (int i=0; i<result.length; i++) 
+                        agents.add(result[i].getName());
+                }
+            	return agents;
+            } catch (FIPAException fe) { fe.printStackTrace(); }  
             return null;
         }
     }

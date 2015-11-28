@@ -25,7 +25,7 @@ import java.util.Random;
  */
 public class SensorDistancia extends Agent {
         private static final long serialVersionUID = 1L;
-	private boolean sensorState = true; //depois meter a falso;
+	private boolean sensorState = false; //depois meter a falso;
 	private boolean finished = false;
         private int distancia;
 	private boolean atravar = false;
@@ -185,10 +185,9 @@ public class SensorDistancia extends Agent {
                                 }
                                 if(msg.getContent().equals("travar"))
                                 {
-                                    if(isSensorState()) //ver se ja esta a travar
+                                    if(isSensorState()) 
                                     {
                                         setTravar(true);
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a travar");
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
                                         
@@ -203,7 +202,6 @@ public class SensorDistancia extends Agent {
                                 {
                                     if(isSensorState()){
                                         setTravar(false);
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
                                         

@@ -27,7 +27,7 @@ import java.util.ArrayList;
 public class CoordenadorTravao extends Agent {
     
     private static final long serialVersionUID = 1L;
-    private boolean sensorState = true; //depois meter a falso
+    private boolean sensorState = false; //depois meter a falso
     private boolean finished = false;     
     private static int distancia = 1; //distancia naquele segundo
     private static int velocidade = 1; //velocidade instantanea
@@ -56,13 +56,12 @@ public class CoordenadorTravao extends Agent {
     }
     
     @Override
-    protected void takeDown(){
-      	super.takeDown();
+        protected void takeDown(){
+      	 super.takeDown();
 		
-		 try { DFService.deregister(this); }
+	 try { DFService.deregister(this); }
          catch (Exception e) {e.printStackTrace();}
-		 
-		 System.out.println("A remover registo de serviços...");
+         System.out.println("A remover registo de serviços...");
 	 }
     
 	public boolean isSensorState() {
@@ -99,6 +98,21 @@ public class CoordenadorTravao extends Agent {
                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
                        setFinished(true);
                 }
+               if (msg.getContent().equals("offline"))
+               {
+                   if (isSensorState())
+                   {
+                       System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
+                       reply.setPerformative(ACLMessage.CONFIRM);
+                       myAgent.send(reply);
+                       setSensorState(false);
+                        }
+                    else
+                    {
+                       reply.setPerformative(ACLMessage.FAILURE);
+                        myAgent.send(reply);
+                    }
+               }
                 if (msg.getContent().equals("online"))
                 {
                     if (isSensorState())
@@ -160,7 +174,8 @@ public class CoordenadorTravao extends Agent {
          }
         
         protected void onTick()
-        {   
+        {  
+           if(isSensorState()){
            float criterio = (float)distancia/velocidade;
            if(!atravar){
             if(criterio < 1.5){
@@ -189,6 +204,7 @@ public class CoordenadorTravao extends Agent {
               } 
               
            }
+        }
         }
     }
       /*

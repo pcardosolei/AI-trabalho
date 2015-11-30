@@ -3,12 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/SensorTravao.java</file>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/Interface.java</file>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/CoordenadorTravao.java</file>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/SensorDistancia.java</file>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/Coordenador.java</file>
-            <file>file:/Users/PauloCardoso/NetBeansProjects/AI-trabalho/src/Trabalho/SensorVelocidade.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/SensorTravao.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/SensorCombustivel.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/SensorVelocidade.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/SensorDistancia.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/CoordenadorTravao.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/CoordenadorInterface.java</file>
+            <file>file:/C:/Users/Portatilcar/Documents/GitHub/AI-trabalho/src/Trabalho/SensorTemperatura.java</file>
         </group>
     </open-files>
 </project-private>

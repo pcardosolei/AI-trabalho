@@ -83,16 +83,26 @@ public class CoordenadorInterface extends Agent {
                        case "offline":
                        {   
                            resp.setContent("offline");
-                           ArrayList<AID> agents = searchDFtypes("coordenadortravao distancia travao velocidade");
+                           ArrayList<AID> agents = searchDFtypes("coordenadortravao distancia travao velocidade combustivel");
                                 for(AID sensor : agents){
                                     resp.addReceiver(sensor);
                                 }         
                                 myAgent.send(resp);
                                 break;
                            }    
+                       case "shutdown":
+                       {
+                           resp.setContent("shutdown");
+                             ArrayList<AID> agents = searchDFtypes("coordenadortravao distancia travao velocidade combustivel");
+                                for(AID sensor : agents){
+                                    resp.addReceiver(sensor);
+                                }         
+                                myAgent.send(resp);
+                                break;         
+                       }
                        case "value":
                            resp.setContent("value");
-                           ArrayList<AID> agents = searchDFtypes("distancia velocidade");
+                           ArrayList<AID> agents = searchDFtypes("distancia velocidade combustivel");
                                 for(AID sensor : agents){
                                     resp.addReceiver(sensor);
                                 }         

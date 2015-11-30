@@ -12,6 +12,8 @@ import jade.core.behaviours.ParallelBehaviour;
 import static jade.core.behaviours.ParallelBehaviour.WHEN_ALL;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 
 /**
@@ -24,7 +26,14 @@ public class Interface extends Agent {
     // é preciso adicionar serviços aqui como nos sensores?
     @Override
     protected void setup(){
+        
         super.setup();
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+	ServiceDescription sd = new ServiceDescription();
+	sd.setName(getLocalName());
+	sd.setType("interface");
+	dfd.addServices(sd);
         ParallelBehaviour parallel = new ParallelBehaviour(this,WHEN_ALL);
 	parallel.addSubBehaviour(new ReceiveBehaviour());
         parallel.addSubBehaviour(new NewSendMessage(this,5000));

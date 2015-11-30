@@ -91,31 +91,28 @@ public class CoordenadorTravao extends Agent {
                ACLMessage reply = msg.createReply();  
              if (msg.getPerformative() == ACLMessage.REQUEST)
              {
-               
-                
-               if (msg.getContent().equals("shutdown"))
-               {
-                       System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
-                       setFinished(true);
-                }
-               if (msg.getContent().equals("offline"))
-               {
-                   if (isSensorState())
-                   {
-                       System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
-                       reply.setPerformative(ACLMessage.CONFIRM);
-                       myAgent.send(reply);
-                       setSensorState(false);
-                        }
-                    else
-                    {
-                       reply.setPerformative(ACLMessage.FAILURE);
-                        myAgent.send(reply);
-                    }
-               }
-                if (msg.getContent().equals("online"))
-                {
-                    if (isSensorState())
+               String message = msg.getContent();
+               switch(message){
+                   case "shutdown":
+                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
+                        setFinished(true);
+                       break;
+                   case "offline":
+                        if (isSensorState())
+                        {
+                            System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
+                            reply.setPerformative(ACLMessage.CONFIRM);
+                            myAgent.send(reply);
+                            setSensorState(false);
+                             }
+                         else
+                         {
+                            reply.setPerformative(ACLMessage.FAILURE);
+                             myAgent.send(reply);
+                         }
+                        break;
+                   case "online":
+                       if (isSensorState())
                     {
                         reply.setPerformative(ACLMessage.FAILURE);
                         myAgent.send(reply);
@@ -127,37 +124,37 @@ public class CoordenadorTravao extends Agent {
                             myAgent.send(reply);
                             setSensorState(true);
                         }
-               } else{
-                
-               String[] partes = msg.getContent().split(" ");
-               switch(partes[0]){
-                   case "distancia":
-                       try{
-                       distancia = Integer.parseInt(partes[1]); 
-                       }catch(Exception e){
-                           
-                       }
-                       break;
-                   case "velocidade":
-                       try{
-                       velocidade = Integer.parseInt(partes[1]);
-                       break;
-                       }catch(Exception e){
-                           
-                       }
+                   break;
                    default: 
-                       break;            
-               }              
-               reply.setPerformative(ACLMessage.CONFIRM);
-               myAgent.send(reply);
-                }
-           } 
+                       String[] partes = msg.getContent().split(" ");
+                        switch(partes[0]){
+                            case "distancia":
+                                try{
+                                distancia = Integer.parseInt(partes[1]); 
+                                }catch(Exception e){
+
+                                }
+                                break;
+                            case "velocidade":
+                                try{
+                                velocidade = Integer.parseInt(partes[1]);
+                                break;
+                                }catch(Exception e){
+
+                                }
+                            default: 
+                                break; 
+                                 }              
+                        reply.setPerformative(ACLMessage.CONFIRM);
+                        myAgent.send(reply);  
+                  break;
+               }         
+            } 
            else
             {                 
             reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
             myAgent.send(reply);
             }
-           
             if (isFinished())
             myAgent.doDelete(); 
            block();    

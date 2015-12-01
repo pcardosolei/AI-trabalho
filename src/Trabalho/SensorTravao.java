@@ -90,15 +90,13 @@ public class SensorTravao extends Agent{
 
                         if (msg.getPerformative() == ACLMessage.REQUEST)
                         {
-                                if (msg.getContent().equals("shutdown"))
-                                {
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
-                                        setFinished(true);
-                                }
-
-                                if (msg.getContent().equals("online"))
-                                {
-                                        if (isSensorState())
+                            switch(msg.getContent()){
+                                case "shutdown":
+                                    System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
+                                    setFinished(true);
+                                    break;
+                                case "online":
+                                    if (isSensorState())
                                         {
                                                 reply.setPerformative(ACLMessage.FAILURE);
                                                 myAgent.send(reply);
@@ -110,11 +108,9 @@ public class SensorTravao extends Agent{
                                                 myAgent.send(reply);
                                                 setSensorState(true);
                                         }
-                                }
-
-                                if (msg.getContent().equals("offline"))
-                                {
-                                        if (isSensorState())
+                                    break;
+                                case "offline":
+                                     if (isSensorState())
                                         {
                                                 System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
                                                 reply.setPerformative(ACLMessage.CONFIRM);
@@ -126,11 +122,10 @@ public class SensorTravao extends Agent{
                                                 reply.setPerformative(ACLMessage.FAILURE);
                                                 myAgent.send(reply);
                                         }
-
-                                }
-                                if(msg.getContent().equals("travar"))
-                                {
-                                    if(isSensorState()) //ver se ja esta a travar
+                                    break;
+                                case "travar":
+                                    
+                                    if(isSensorState()) 
                                     {
                                         System.out.println("Sensor "+myAgent.getLocalName()+" a travar");
                                         reply.setPerformative(ACLMessage.CONFIRM);
@@ -142,10 +137,9 @@ public class SensorTravao extends Agent{
                                        reply.setPerformative(ACLMessage.FAILURE);
                                        myAgent.send(reply); 
                                     }
-                                }
-                                if(msg.getContent().equals("descansar"))
-                                {
-                                    if(isSensorState()){
+                                    break;
+                                case "descansar":
+                                     if(isSensorState()){
                                         System.out.println("Sensor "+myAgent.getLocalName()+" parou de travar");
                                         reply.setPerformative(ACLMessage.CONFIRM);
                                         myAgent.send(reply);
@@ -156,7 +150,9 @@ public class SensorTravao extends Agent{
                                        reply.setPerformative(ACLMessage.FAILURE);
                                        myAgent.send(reply); 
                                     }
-                                }
+                                    break;
+                                    
+                            }      
                         }
                         else
                         {

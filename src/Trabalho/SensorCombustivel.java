@@ -107,53 +107,49 @@ public class SensorCombustivel extends Agent {
 
                         if (msg.getPerformative() == ACLMessage.REQUEST)
                         {
-                                if (msg.getContent().equals("shutdown"))
-                                {
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
-                                        setFinished(true);
-                                }
-
-                                if (msg.getContent().equals("online"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
-                                        else
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(true);
-                                        }
-                                }
-
-                                if (msg.getContent().equals("offline"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(false);
-                                        }
-                                        else
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
-
-                                }
-                                if (msg.getContent().equals("value"))
-                                {
+                               switch(msg.getContent()){
+                                case "shutdown":
+                                    System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
+                                    setFinished(true);
+                                    break;
+                                case "online":                                 
                                     if (isSensorState())
                                     {
-            					reply.setContent("combustivel "+combustivel);
-            					reply.setPerformative(ACLMessage.INFORM);
-            					myAgent.send(reply);
-                                	}   
-                                }
+                                      reply.setPerformative(ACLMessage.FAILURE);
+                                      myAgent.send(reply);
+                                    }
+                                    else
+                                    {
+                                    System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
+                                    reply.setPerformative(ACLMessage.CONFIRM);
+                                    myAgent.send(reply);
+                                    setSensorState(true);
+                                    }
+                                    break;
+                                case "offline":
+                                    if (isSensorState())
+                                    {
+                                            System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
+                                            reply.setPerformative(ACLMessage.CONFIRM);
+                                            myAgent.send(reply);
+                                            setSensorState(false);
+                                    }
+                                    else
+                                    {
+                                            reply.setPerformative(ACLMessage.FAILURE);
+                                            myAgent.send(reply);
+                                    }
+                                    break;
+                                case "value":
+                                    if (isSensorState())
+                                    {
+                                            reply.setContent("velocidade "+combustivel);
+                                            reply.setPerformative(ACLMessage.INFORM);
+                                            myAgent.send(reply);
+                                    }
+                                    break;
+                               }
+                        }
                         else
                         {
                                 reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
@@ -166,7 +162,7 @@ public class SensorCombustivel extends Agent {
                     block();
                         }
                 }
-}
+
         
         
 	AID [] searchDF( String service )

@@ -90,32 +90,31 @@ public class SensorVelocidade extends Agent {
         
       private class CalculaVelocidade extends TickerBehaviour
       {
-      
           public CalculaVelocidade(Agent a, long timeout)
-        {   
+            {   
             super(a,timeout);
-         }
+             }
         
-        protected void onTick()
-        {           
-            if(atravar)
-                velocidade -= Math.abs(new Random().nextInt(15) + 5 );
-            else if(!atravar)
-                velocidade += Math.abs(new Random().nextInt(16));
-            if(velocidade < 0)
-                velocidade = 0;
-        
-        
-            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-            msg.setConversationId(""+System.currentTimeMillis());
-            msg.setContent("velocidade "+velocidade);
-            AID [] distancia = searchDF("coordenadortravao");
-            for(AID sensor : distancia){
-                msg.addReceiver(sensor);
+            protected void onTick()
+            {           
+                if(atravar)
+                    velocidade -= Math.abs(new Random().nextInt(15) + 5 );
+                else if(!atravar)
+                    velocidade += Math.abs(new Random().nextInt(16));
+                if(velocidade < 0)
+                    velocidade = 0;
+
+
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                msg.setConversationId(""+System.currentTimeMillis());
+                msg.setContent("velocidade "+velocidade);
+                AID [] distancia = searchDF("coordenadortravao");
+                for(AID sensor : distancia){
+                    msg.addReceiver(sensor);
+                    }
+                myAgent.send(msg);
                 }
-            myAgent.send(msg);
-            }
-    }
+        }
 
 	private class ReceiveBehaviour extends CyclicBehaviour
 	{
@@ -130,80 +129,70 @@ public class SensorVelocidade extends Agent {
                         ACLMessage reply = msg.createReply();
 
                         if (msg.getPerformative() == ACLMessage.REQUEST)
-                        {
-                                if (msg.getContent().equals("shutdown"))
-                                {
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
-                                        setFinished(true);
-                                }
-
-                                if (msg.getContent().equals("online"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
-                                        else
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(true);
-                                        }
-                                }
-
-                                if (msg.getContent().equals("offline"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(false);
-                                        }
-                                        else
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
-
-                                }
-                                if (msg.getContent().equals("value"))
-                                {
+                        {       
+                            switch(msg.getContent()){
+                                case "shutdown":
+                                    System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
+                                    setFinished(true);
+                                    break;
+                                case "online":                                 
                                     if (isSensorState())
                                     {
-            					reply.setContent("velocidade "+velocidade);
-            					reply.setPerformative(ACLMessage.INFORM);
-            					myAgent.send(reply);
-                                	}
-                               
-                            }
-                                if(msg.getContent().equals("travar"))
-                                {
+                                      reply.setPerformative(ACLMessage.FAILURE);
+                                      myAgent.send(reply);
+                                    }
+                                    else
+                                    {
+                                    System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
+                                    reply.setPerformative(ACLMessage.CONFIRM);
+                                    myAgent.send(reply);
+                                    setSensorState(true);
+                                    }
+                                    break;
+                                case "offline":
+                                    if (isSensorState())
+                                    {
+                                            System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
+                                            reply.setPerformative(ACLMessage.CONFIRM);
+                                            myAgent.send(reply);
+                                            setSensorState(false);
+                                    }
+                                    else
+                                    {
+                                            reply.setPerformative(ACLMessage.FAILURE);
+                                            myAgent.send(reply);
+                                    }
+                                    break;
+                                case "value":
+                                    if (isSensorState())
+                                    {
+                                            reply.setContent("velocidade "+velocidade);
+                                            reply.setPerformative(ACLMessage.INFORM);
+                                            myAgent.send(reply);
+                                    }
+                                    break;
+                                case "travar":
                                     if(isSensorState()) 
                                     {
                                         setTravar(true);
                                         reply.setPerformative(ACLMessage.INFORM);
                                         myAgent.send(reply);
-                                        
                                     }
                                     else
                                     {
                                        reply.setPerformative(ACLMessage.FAILURE);
                                        myAgent.send(reply); 
                                     }
-                                }
-                                if(msg.getContent().equals("descansar"))
-                                {
+                                    break;
+                                case "descansar":
                                     if(isSensorState()){
                                         setTravar(false);
                                         reply.setPerformative(ACLMessage.INFORM);
-                                        myAgent.send(reply);
-                                        
+                                        myAgent.send(reply); 
                                     }
+                                    break;
                                 }
-                        else
+                        }else
                         {
                                 reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
                                 myAgent.send(reply);
@@ -213,9 +202,9 @@ public class SensorVelocidade extends Agent {
                     if (isFinished())
                         myAgent.doDelete();
                     block();
-                        }
-                }
-}
+                    }
+            }
+
         
 	AID [] searchDF( String service )
 //  ---------------------------------

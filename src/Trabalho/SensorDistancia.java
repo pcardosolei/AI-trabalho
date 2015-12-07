@@ -24,231 +24,188 @@ import java.util.Random;
  * @author PauloCardoso
  */
 public class SensorDistancia extends Agent {
-        private static final long serialVersionUID = 1L;
-	private boolean sensorState = false; //depois meter a falso;
-	private boolean finished = false;
-        private int distancia;
-	private boolean atravar = false;
-        
-	@Override
-	protected void takeDown() {
-		super.takeDown();
-		
-		 try { DFService.deregister(this); }
-         catch (Exception e) {e.printStackTrace();}
-		 
-		 System.out.println("A remover registo de serviços...");
-	}
-	
-	@Override
-	protected void setup() {
-		super.setup();
-		
-		DFAgentDescription dfd = new DFAgentDescription();
-		dfd.setName(getAID());
-		ServiceDescription sd = new ServiceDescription();
-		sd.setName(getLocalName());
-		sd.setType("distancia");
-		dfd.addServices(sd);
-		distancia = Math.abs(new Random().nextInt() % 100);
-            				
-		try{ DFService.register(this, dfd );}
-                    catch (FIPAException fe) { fe.printStackTrace(); }
-		
-		System.out.println("Agente "+this.getLocalName()+" a iniciar...");
-		ParallelBehaviour parallel = new ParallelBehaviour(this,WHEN_ALL);
-                parallel.addSubBehaviour(new ReceiveBehaviour());
-                parallel.addSubBehaviour(new CalculaDistancia(this,1000));
-        
-                this.addBehaviour(parallel);
-        
-	}
-	
-	public boolean isSensorState() {
-		return sensorState;
-	}
 
-	public void setSensorState(boolean sensorState) {
-		this.sensorState = sensorState;
-	}
-        
-        public boolean isTravar(){
-            return atravar;
-        }
-        
-        public void setTravar(boolean atravar){
-            this.atravar = atravar;
-        }
-        
-	public boolean isFinished() {
-		return finished;
-	}
+    private static final long serialVersionUID = 1L;
+    private boolean sensorState = false; //depois meter a falso;
+    private final Random r = new Random();
+    private final int carDefVel = 100;
+    private int distancia = 50;
+    //dados de ambiente
+    private int velocidade = 0;
 
-	public void setFinished(boolean finished) {
-		this.finished = finished;
-	}
-        
-      private class CalculaDistancia extends TickerBehaviour
-      {
-      
-          public CalculaDistancia(Agent a, long timeout)
-        {   
-            super(a,timeout);
-         }
-        
-        protected void onTick()
-        {   
-            if(!atravar){
-            distancia += new Random().nextInt(16) - 8;
-            } else if(atravar){
-                distancia +=  Math.abs(new Random().nextInt(7) );
-            }
-            
-            if(distancia < 0){
-                distancia = 0;  //bateu de frente 
-            }
-            
-           
-            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-            msg.setConversationId(""+System.currentTimeMillis());
-            msg.setContent("distancia "+distancia);
-            AID [] distancia = searchDF("coordenadortravao");
-            for(AID sensor : distancia){
-                msg.addReceiver(sensor);
-                }
-            myAgent.send(msg);
-            
-                   
+    @Override
+    protected void takeDown() {
+        super.takeDown();
+
+        try {
+            DFService.deregister(this);
+        } catch (Exception e) {
+        }
+        this.doDelete();
+        System.out.println("A remover registo de serviços...");
+    }
+
+    @Override
+    protected void setup() {
+        super.setup();
+
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setName(getLocalName());
+        sd.setType("distancia");
+        dfd.addServices(sd);
+
+        try {
+            DFService.register(this, dfd);
+        } catch (FIPAException fe) {
+        }
+
+        System.out.println("Agente " + this.getLocalName() + " a iniciar...");
+        ParallelBehaviour parallel = new ParallelBehaviour(this, WHEN_ALL);
+        parallel.addSubBehaviour(new ReceiveBehaviour());
+        parallel.addSubBehaviour(new CalculaDistancia(this, 1000));
+
+        this.addBehaviour(parallel);
+
+    }
+
+    public boolean isSensorState() {
+        return sensorState;
+    }
+
+    public void setSensorState(boolean sensorState) {
+        this.sensorState = sensorState;
+    }
+
+    public void setDistancia(int d) {
+        if (d <= 0) {
+            distancia = 0;
+        } else {
+            distancia = d;
         }
     }
 
-	private class ReceiveBehaviour extends CyclicBehaviour
-	{
-		private static final long serialVersionUID = 1L;
+    public void setVelocidade(int c) {
+        if (c <= 0) {
+            velocidade = 0;
+        } else if (c >= 240) {
+            velocidade = 240;
+        } else {
+            velocidade = c;
+        }
+    }
 
-		@Override
-		public void action() 
-		{
-		    ACLMessage msg = receive();
-                    if (msg != null) 
-                    {            	
-                        ACLMessage reply = msg.createReply();
+    public int generateValue() {
+        int random = r.nextInt(100);
+        if (random <= 5) { //valor errado
+            return -distancia;
+        } else if (random <= 15) { //valor desviado para baixo
+            return (int) (distancia - distancia * (r.nextFloat() * 0.1f));
+        } else if (random <= 25) { //valor desviado para cima
+            return (int) (distancia + distancia * (r.nextFloat() * 0.1f));
+        } else { //valor real
+            return distancia;
+        }
+    }
 
-                        if (msg.getPerformative() == ACLMessage.REQUEST)
-                        {
-                                if (msg.getContent().equals("shutdown"))
-                                {
-                                        System.out.println("Sensor "+myAgent.getLocalName()+" a terminar...");
-                                        setFinished(true);
-                                }
+    private class CalculaDistancia extends TickerBehaviour {
 
-                                if (msg.getContent().equals("online"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
-                                        else
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora online.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(true);
-                                        }
-                                }
+        public CalculaDistancia(Agent a, long timeout) {
+            super(a, timeout);
+        }
 
-                                if (msg.getContent().equals("offline"))
-                                {
-                                        if (isSensorState())
-                                        {
-                                                System.out.println("Sensor "+myAgent.getLocalName()+" está agora offline.");
-                                                reply.setPerformative(ACLMessage.CONFIRM);
-                                                myAgent.send(reply);
-                                                setSensorState(false);
-                                        }
-                                        else
-                                        {
-                                                reply.setPerformative(ACLMessage.FAILURE);
-                                                myAgent.send(reply);
-                                        }
+        @Override
+        protected void onTick() {
+            if (velocidade < carDefVel) {
+                setDistancia(distancia + (int) ((float) ((carDefVel - velocidade) * 500) / 3600.0f));
+            } else if (velocidade > carDefVel) {
+                setDistancia(distancia - (int) ((float) ((velocidade - carDefVel) * 500) / 3600.0f));
+            }
+        }
+    }
 
-                                }
-                                if (msg.getContent().equals("value"))
-                                {
-                                    if (isSensorState())
-                                    {
-            					reply.setContent("distancia "+distancia);
-            					reply.setPerformative(ACLMessage.INFORM);
-            					myAgent.send(reply);
-                                	}   
-                                }
-                                if(msg.getContent().equals("travar"))
-                                {
-                                    if(isSensorState()) 
-                                    {
-                                        setTravar(true);
-                                        reply.setPerformative(ACLMessage.INFORM);
-                                        myAgent.send(reply);
-                                        
-                                    }
-                                    else
-                                    {
-                                       reply.setPerformative(ACLMessage.FAILURE);
-                                       myAgent.send(reply); 
-                                    }
-                                }
-                                if(msg.getContent().equals("descansar"))
-                                {
-                                    if(isSensorState()){
-                                        setTravar(false);
-                                        reply.setPerformative(ACLMessage.INFORM);
-                                        myAgent.send(reply);
-                                        
-                                    }
-                                    else
-                                    {
-                                       reply.setPerformative(ACLMessage.FAILURE);
-                                       myAgent.send(reply); 
-                                    }
-                                }
-                        else
-                        {
-                                reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-                                myAgent.send(reply);
+    private class ReceiveBehaviour extends CyclicBehaviour {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void action() {
+            ACLMessage msg = myAgent.receive();
+            if (msg != null) {
+                ACLMessage reply = msg.createReply();
+                if (msg.getPerformative() == ACLMessage.REQUEST) {
+                    switch (msg.getContent()) {
+                        case "shutdown":
+                            System.out.println("Sensor " + myAgent.getLocalName() + " a terminar...");
+                            takeDown();
+                            break;
+                        case "online":
+                            if (isSensorState()) {
+                                reply.setPerformative(ACLMessage.FAILURE);
+                            } else {
+                                System.out.println("Sensor " + myAgent.getLocalName() + " está agora online.");
+                                reply.setPerformative(ACLMessage.CONFIRM);
+                                setSensorState(true);
+                            }
+                            break;
+                        case "offline":
+                            if (isSensorState()) {
+                                System.out.println("Sensor " + myAgent.getLocalName() + " está agora offline.");
+                                reply.setPerformative(ACLMessage.CONFIRM);
+                                setSensorState(false);
+                            } else {
+                                reply.setPerformative(ACLMessage.FAILURE);
+                            }
+                            break;
+                        case "value":
+                            if (isSensorState()) {
+                                reply.setContent("distancia " + generateValue());
+                                reply.setPerformative(ACLMessage.INFORM);
+                            }
+                            break;
+                    }
+                    myAgent.send(reply);
+                } else if (msg.getPerformative() == ACLMessage.INFORM) {
+                    String[] message = msg.getContent().split(" ");
+                    if ("velocidade".equals(message[0])) {
+                        if (isSensorState()) {
+                            int c = Integer.parseInt(message[1]);
+                            if (c >= 0) {
+                                setVelocidade(c);
+                            }
                         }
                     }
-
-                    if (isFinished())
-                        myAgent.doDelete();
-                    block();
-                        }
+                } else {
+                    reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+                    myAgent.send(reply);
                 }
+            }
+            block();
+        }
+    }
+
+    AID[] searchDF(String service) //  ---------------------------------
+    {
+        DFAgentDescription dfd = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType(service);
+        dfd.addServices(sd);
+
+        SearchConstraints ALL = new SearchConstraints();
+        ALL.setMaxResults(new Long(-1));
+
+        try {
+            DFAgentDescription[] result = DFService.search(this, dfd, ALL);
+            AID[] agents = new AID[result.length];
+            for (int i = 0; i < result.length; i++) {
+                agents[i] = result[i].getName();
+            }
+            return agents;
+
+        } catch (FIPAException fe) {
+        }
+
+        return null;
+    }
 }
-        
-        
-	AID [] searchDF( String service )
-//  ---------------------------------
-	{
-		DFAgentDescription dfd = new DFAgentDescription();
-   		ServiceDescription sd = new ServiceDescription();
-   		sd.setType( service );
-		dfd.addServices(sd);
-		
-		SearchConstraints ALL = new SearchConstraints();
-		ALL.setMaxResults(new Long(-1));
-
-		try
-		{
-			DFAgentDescription[] result = DFService.search(this, dfd, ALL);
-			AID[] agents = new AID[result.length];
-			for (int i=0; i<result.length; i++) 
-				agents[i] = result[i].getName() ;
-			return agents;
-
-		}
-        catch (FIPAException fe) { fe.printStackTrace(); }
-        
-      	return null;
-	}
-}  

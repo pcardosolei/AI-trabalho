@@ -21,18 +21,16 @@ import java.util.Random;
 
 /**
  *
- * @author PauloCardoso
+ * @author Portatilcar
  */
-public class SensorVelocidade extends Agent {
+public class SensorTemperatura extends Agent {
 
-    private static final long serialVersionUID = 1L; //Usamos isto para alguma coisa?
-    private boolean sensorState = false; //depois meter a falso
-    private int velocidade = 0;
+    private static final long serialVersionUID = 1L;
+    private boolean sensorState = false; //depois meter a falso;
     private final Random r = new Random();
+    private int temperatura = 80;
     //dados do ambiente
-    private boolean atravar = false;
-    private boolean acelerar = false;
-    private int gear;
+    private float rotacoes;
 
     @Override
     protected void takeDown() {
@@ -40,7 +38,8 @@ public class SensorVelocidade extends Agent {
 
         try {
             DFService.deregister(this);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         this.doDelete();
         System.out.println("A remover registo de serviços...");
     }
@@ -53,17 +52,18 @@ public class SensorVelocidade extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         sd.setName(getLocalName());
-        sd.setType("velocidade");
+        sd.setType("temperatura");
         dfd.addServices(sd);
 
         try {
             DFService.register(this, dfd);
-        } catch (FIPAException fe) {}
+        } catch (FIPAException fe) {
+        }
 
         System.out.println("Agente " + this.getLocalName() + " a iniciar...");
         ParallelBehaviour parallel = new ParallelBehaviour(this, WHEN_ALL);
         parallel.addSubBehaviour(new ReceiveBehaviour());
-        parallel.addSubBehaviour(new CalculaVelocidade(this, 1000));
+        parallel.addSubBehaviour(new CalculaTemperatura(this, 1000));
 
         this.addBehaviour(parallel);
 
@@ -77,68 +77,53 @@ public class SensorVelocidade extends Agent {
         this.sensorState = sensorState;
     }
 
-    public void setTravar() {
-        this.atravar = true;
-        this.acelerar = false;
-    }
-
-    public void setAcelerar() {
-        this.atravar = false;
-        this.acelerar = true;
-    }
-    
-    public void setManter() {
-        this.atravar = false;
-        this.acelerar = false;
-    }
-
-    public void gearUp() {
-        if (gear < 5) {
-            this.gear++;
-        }
-    }
-
-    public void gearDown() {
-        if (gear > 1) {
-            this.gear--;
-        }
-    }
-
-    public void setVelocidade(int v) {
-        if (v <= 0) {
-            velocidade = 0;
-        } else if (v >= 240) {
-            velocidade = 240;
+    public void setTemperatura(int t) {
+        if (t <= 40) {
+            temperatura = 40;
+        } else if (t >= 120) {
+            temperatura = 120;
         } else {
-            velocidade = v;
+            temperatura = t;
+        }
+    }
+
+    public void setRotacoes(float t) {
+        if (t <= 0) {
+            rotacoes = 0;
+        } else if (t >= 6) {
+            rotacoes = 6;
+        } else {
+            rotacoes = t;
         }
     }
 
     public int generateValue() {
         int random = r.nextInt(100);
         if (random <= 5) { //valor errado
-            return -velocidade;
+            return -temperatura;
         } else if (random <= 15) { //valor desviado para baixo
-            return (int) (velocidade - (velocidade * (r.nextFloat() * 0.1f)));
+            return (int) (temperatura - temperatura * (r.nextFloat() * 0.05f));
         } else if (random <= 25) { //valor desviado para cima
-            return (int) (velocidade + (velocidade * (r.nextFloat() * 0.1f)));
+            return (int) (temperatura + temperatura * (r.nextFloat() * 0.05f));
         } else { //valor real
-            return velocidade;
+            return temperatura;
         }
     }
 
-    private class CalculaVelocidade extends TickerBehaviour {
+    private class CalculaTemperatura extends TickerBehaviour {
 
-        public CalculaVelocidade(Agent a, long timeout) {
+        public CalculaTemperatura(Agent a, long timeout) {
             super(a, timeout);
         }
 
         @Override
         protected void onTick() {
-            if (acelerar) {
-                setVelocidade(velocidade + 4 + gear * 2);
-            } else if (atravar) {
-                setVelocidade(velocidade - 5 - gear * 3);
+            if (rotacoes < 1) {
+                setTemperatura(temperatura - 1);
+            } else if (rotacoes > 2) {
+                setTemperatura(temperatura + 1);
+            } else if (rotacoes > 5) {
+                setTemperatura(temperatura + 3);
             }
         }
     }
@@ -176,39 +161,22 @@ public class SensorVelocidade extends Agent {
                             break;
                         case "value":
                             if (isSensorState()) {
-                                reply.setContent("velocidade " + generateValue());
+                                reply.setContent("temperatura " + generateValue());
                                 reply.setPerformative(ACLMessage.INFORM);
                             }
                             break;
+
                     }
                     myAgent.send(reply);
                 } else if (msg.getPerformative() == ACLMessage.INFORM) {
-                    switch (msg.getContent()) {
-                        case "travar":
-                            if (isSensorState()) {
-                                setTravar();
+                    String[] message = msg.getContent().split(" ");
+                    if ("rotacoes".equals(message[0])) {
+                        if (isSensorState()) {
+                            float c = Float.parseFloat(message[1]);
+                            if (c >= 0) {
+                                setRotacoes(c);
                             }
-                            break;
-                        case "acelerar":
-                            if (isSensorState()) {
-                                setAcelerar();
-                            }
-                            break;
-                        case "manter":
-                            if (isSensorState()) {
-                                setManter();
-                            }
-                            break;
-                        case "gearup":
-                            if (isSensorState()) {
-                                gearUp();
-                            }
-                            break;
-                        case "geardown":
-                            if (isSensorState()) {
-                                gearDown();
-                            }
-                            break;
+                        }
                     }
                 } else {
                     reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
@@ -237,7 +205,8 @@ public class SensorVelocidade extends Agent {
             }
             return agents;
 
-        } catch (FIPAException fe) {}
+        } catch (FIPAException fe) {
+        }
 
         return null;
     }

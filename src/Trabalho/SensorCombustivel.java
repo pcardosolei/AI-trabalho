@@ -21,18 +21,16 @@ import java.util.Random;
 
 /**
  *
- * @author PauloCardoso
+ * @author Portatilcar
  */
-public class SensorVelocidade extends Agent {
+public class SensorCombustivel extends Agent {
 
-    private static final long serialVersionUID = 1L; //Usamos isto para alguma coisa?
-    private boolean sensorState = false; //depois meter a falso
-    private int velocidade = 0;
+    private static final long serialVersionUID = 1L;
+    private boolean sensorState = false;
+    private float combustivel = 1;
     private final Random r = new Random();
     //dados do ambiente
-    private boolean atravar = false;
-    private boolean acelerar = false;
-    private int gear;
+    private int velocidade = 0;
 
     @Override
     protected void takeDown() {
@@ -40,9 +38,11 @@ public class SensorVelocidade extends Agent {
 
         try {
             DFService.deregister(this);
-        } catch (Exception e) {}
-        this.doDelete();
+        } catch (Exception e) {
+        }
+        doDelete();
         System.out.println("A remover registo de serviços...");
+
     }
 
     @Override
@@ -53,17 +53,18 @@ public class SensorVelocidade extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         sd.setName(getLocalName());
-        sd.setType("velocidade");
+        sd.setType("combustivel");
         dfd.addServices(sd);
 
         try {
             DFService.register(this, dfd);
-        } catch (FIPAException fe) {}
+        } catch (FIPAException fe) {
+        }
 
         System.out.println("Agente " + this.getLocalName() + " a iniciar...");
         ParallelBehaviour parallel = new ParallelBehaviour(this, WHEN_ALL);
         parallel.addSubBehaviour(new ReceiveBehaviour());
-        parallel.addSubBehaviour(new CalculaVelocidade(this, 1000));
+        parallel.addSubBehaviour(new CalculaCombustivel(this, 1000));
 
         this.addBehaviour(parallel);
 
@@ -77,68 +78,55 @@ public class SensorVelocidade extends Agent {
         this.sensorState = sensorState;
     }
 
-    public void setTravar() {
-        this.atravar = true;
-        this.acelerar = false;
-    }
-
-    public void setAcelerar() {
-        this.atravar = false;
-        this.acelerar = true;
-    }
-    
-    public void setManter() {
-        this.atravar = false;
-        this.acelerar = false;
-    }
-
-    public void gearUp() {
-        if (gear < 5) {
-            this.gear++;
+    public void setCombustivel(float c) {
+        if (c <= 0) {
+            combustivel = 0;
+        } else if (c >= 1) {
+            combustivel = 1;
+        } else {
+            combustivel = c;
         }
     }
 
-    public void gearDown() {
-        if (gear > 1) {
-            this.gear--;
-        }
-    }
-
-    public void setVelocidade(int v) {
-        if (v <= 0) {
+    public void setVelocidade(int c) {
+        if (c <= 0) {
             velocidade = 0;
-        } else if (v >= 240) {
+        } else if (c >= 240) {
             velocidade = 240;
         } else {
-            velocidade = v;
+            velocidade = c;
         }
     }
 
-    public int generateValue() {
+    public float generateValue() {
         int random = r.nextInt(100);
         if (random <= 5) { //valor errado
-            return -velocidade;
+            return -combustivel;
         } else if (random <= 15) { //valor desviado para baixo
-            return (int) (velocidade - (velocidade * (r.nextFloat() * 0.1f)));
+            return combustivel - combustivel * (r.nextFloat() * 0.1f);
         } else if (random <= 25) { //valor desviado para cima
-            return (int) (velocidade + (velocidade * (r.nextFloat() * 0.1f)));
+            return combustivel + combustivel * (r.nextFloat() * 0.1f);
         } else { //valor real
-            return velocidade;
+            return combustivel;
         }
     }
 
-    private class CalculaVelocidade extends TickerBehaviour {
+    private class CalculaCombustivel extends TickerBehaviour {
 
-        public CalculaVelocidade(Agent a, long timeout) {
+        public CalculaCombustivel(Agent a, long timeout) {
             super(a, timeout);
         }
 
         @Override
         protected void onTick() {
-            if (acelerar) {
-                setVelocidade(velocidade + 4 + gear * 2);
-            } else if (atravar) {
-                setVelocidade(velocidade - 5 - gear * 3);
+            if (velocidade <= 0) {
+
+            } else if (velocidade <= 50) {
+                setCombustivel(combustivel - 0.006f);
+            } else if (velocidade <= 120) {
+                setCombustivel(combustivel - 0.003f);
+            } else {
+                setCombustivel(combustivel - 0.005f);
             }
         }
     }
@@ -172,43 +160,27 @@ public class SensorVelocidade extends Agent {
                                 System.out.println("Sensor " + myAgent.getLocalName() + " está agora offline.");
                                 reply.setPerformative(ACLMessage.CONFIRM);
                                 setSensorState(false);
+                            } else {
+                                reply.setPerformative(ACLMessage.FAILURE);
                             }
                             break;
                         case "value":
                             if (isSensorState()) {
-                                reply.setContent("velocidade " + generateValue());
+                                reply.setContent("combustivel " + generateValue());
                                 reply.setPerformative(ACLMessage.INFORM);
                             }
                             break;
                     }
                     myAgent.send(reply);
                 } else if (msg.getPerformative() == ACLMessage.INFORM) {
-                    switch (msg.getContent()) {
-                        case "travar":
-                            if (isSensorState()) {
-                                setTravar();
+                    String[] message = msg.getContent().split(" ");
+                    if ("velocidade".equals(message[0])) {
+                        if (isSensorState()) {
+                            int c = Integer.parseInt(message[1]);
+                            if (c >= 0) {
+                                setVelocidade(c);
                             }
-                            break;
-                        case "acelerar":
-                            if (isSensorState()) {
-                                setAcelerar();
-                            }
-                            break;
-                        case "manter":
-                            if (isSensorState()) {
-                                setManter();
-                            }
-                            break;
-                        case "gearup":
-                            if (isSensorState()) {
-                                gearUp();
-                            }
-                            break;
-                        case "geardown":
-                            if (isSensorState()) {
-                                gearDown();
-                            }
-                            break;
+                        }
                     }
                 } else {
                     reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
@@ -237,7 +209,8 @@ public class SensorVelocidade extends Agent {
             }
             return agents;
 
-        } catch (FIPAException fe) {}
+        } catch (FIPAException fe) {
+        }
 
         return null;
     }
